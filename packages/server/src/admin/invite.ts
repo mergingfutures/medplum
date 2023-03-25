@@ -1,4 +1,4 @@
-import { createReference, Operator, ProfileResource } from '@medplum/core';
+import { badRequest, createReference, OperationOutcomeError, Operator, ProfileResource } from '@medplum/core';
 import {
   AccessPolicy,
   Practitioner,
@@ -41,25 +41,34 @@ export async function inviteHandler(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { membership } = await inviteUser({
-    ...req.body,
-    project: res.locals.project,
-  });
+  const inviteRequest = { ...req.body } as InviteRequest;
+  const { projectId } = req.params;
+  if (res.locals.project.superAdmin) {
+    inviteRequest.project = await systemRepo.readResource('Project', projectId as string);
+  } else {
+    inviteRequest.project = res.locals.project;
+  }
 
-  res.status(200).json(membership);
+  try {
+    const { membership } = await inviteUser(inviteRequest);
+    res.status(200).json(membership);
+  } catch (err: any) {
+    logger.info(err);
+    res.status(200).json({ error: err });
+  }
 }
 
 export interface InviteRequest {
-  readonly project: Project;
-  readonly resourceType: 'Patient' | 'Practitioner' | 'RelatedPerson';
-  readonly firstName: string;
-  readonly lastName: string;
-  readonly email?: string;
-  readonly externalId?: string;
-  readonly accessPolicy?: Reference<AccessPolicy>;
-  readonly sendEmail?: boolean;
-  readonly password?: string;
-  readonly invitedBy?: Reference<User>;
+  project: Project;
+  resourceType: 'Patient' | 'Practitioner' | 'RelatedPerson';
+  firstName: string;
+  lastName: string;
+  email?: string;
+  externalId?: string;
+  accessPolicy?: Reference<AccessPolicy>;
+  sendEmail?: boolean;
+  password?: string;
+  invitedBy?: Reference<User>;
 }
 
 export async function inviteUser(
@@ -95,7 +104,11 @@ export async function inviteUser(
   const membership = await createProjectMembership(user, project, profile, request.accessPolicy);
 
   if (request.email && request.sendEmail !== false) {
-    await sendInviteEmail(request, user, existingUser, passwordResetUrl);
+    try {
+      await sendInviteEmail(request, user, existingUser, passwordResetUrl);
+    } catch (err) {
+      throw new OperationOutcomeError(badRequest('Could not send email. Make sure you have AWS SES set up.'), err);
+    }
   }
 
   return { user, profile, membership };

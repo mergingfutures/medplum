@@ -1486,6 +1486,26 @@ describe('FHIR Repo', () => {
     await systemRepo.reindexResourceType('Practitioner');
   });
 
+  test('Rebuild compartments as non-admin', async () => {
+    const repo = new Repository({
+      project: randomUUID(),
+      author: {
+        reference: 'Practitioner/' + randomUUID(),
+      },
+    });
+
+    try {
+      await repo.rebuildCompartmentsForResourceType('Practitioner');
+      fail('Expected error');
+    } catch (err) {
+      expect(isOk(err as OperationOutcome)).toBe(false);
+    }
+  });
+
+  test('Rebuild compartments success', async () => {
+    await systemRepo.rebuildCompartmentsForResourceType('Practitioner');
+  });
+
   test('Remove property', async () => {
     const value = randomUUID();
 
@@ -2348,6 +2368,15 @@ describe('FHIR Repo', () => {
     expect(bundle2.entry?.length).toEqual(2);
     expect(bundleContains(bundle2, c1)).toBeTruthy();
     expect(bundleContains(bundle2, c2)).toBeTruthy();
+
+    // Search with count
+    const bundle3 = await systemRepo.search(
+      parseSearchDefinition(`Condition?code=${code}&subject:identifier=mrn|123456&_total=accurate`)
+    );
+    expect(bundle3.entry?.length).toEqual(1);
+    expect(bundle3.total).toBe(1);
+    expect(bundleContains(bundle3, c1)).toBeTruthy();
+    expect(bundleContains(bundle3, c2)).not.toBeTruthy();
   });
 
   test('Purge forbidden', async () => {
@@ -2607,6 +2636,7 @@ describe('FHIR Repo', () => {
 
     const bundle = await systemRepo.search({
       resourceType: 'Patient',
+      total: 'accurate',
       filters: [
         {
           code: 'given',
@@ -2621,9 +2651,40 @@ describe('FHIR Repo', () => {
       ],
     });
     expect(bundle?.entry?.length).toEqual(2);
+    expect(bundle.total).toEqual(2);
     expect(bundleContains(bundle, p1)).toBeTruthy();
     expect(bundleContains(bundle, p2)).not.toBeTruthy();
     expect(bundleContains(bundle, p3)).toBeTruthy();
     expect(bundleContains(bundle, p4)).not.toBeTruthy();
+  });
+
+  test('Duplicate rows from token lookup', async () => {
+    const code = randomUUID();
+
+    const p = await systemRepo.createResource({ resourceType: 'Patient' });
+    const s = await systemRepo.createResource({
+      resourceType: 'ServiceRequest',
+      subject: createReference(p),
+      status: 'active',
+      intent: 'order',
+      category: [
+        {
+          text: code,
+          coding: [
+            {
+              system: 'https://example.com/category',
+              code,
+            },
+          ],
+        },
+      ],
+    });
+
+    const bundle = await systemRepo.search<ServiceRequest>({
+      resourceType: 'ServiceRequest',
+      filters: [{ code: 'category', operator: Operator.EQUALS, value: code }],
+    });
+    expect(bundle.entry?.length).toEqual(1);
+    expect(bundleContains(bundle, s)).toBeTruthy();
   });
 });

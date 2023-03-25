@@ -2,7 +2,7 @@ import { getDisplayString, MedplumClient, normalizeErrorString } from '@medplum/
 import { Bot, OperationOutcome } from '@medplum/fhirtypes';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFile } from 'fs';
 import { createServer } from 'http';
 import fetch from 'node-fetch';
 import { platform } from 'os';
@@ -76,6 +76,9 @@ export async function main(medplum: MedplumClient, argv: string[]): Promise<void
       case 'deploy-bot':
         await runBotCommands(medplum, argv, ['save', 'deploy']);
         break;
+      case 'create-bot':
+        await createBot(medplum, argv);
+        break;
       default:
         console.log(`Unknown command: ${command}`);
     }
@@ -128,10 +131,10 @@ async function openBrowser(url: string): Promise<void> {
   switch (os) {
     case 'openbsd':
     case 'linux':
-      cmd = `xdg-open ${url}`;
+      cmd = `xdg-open '${url}'`;
       break;
     case 'darwin':
-      cmd = `open ${url}`;
+      cmd = `open '${url}'`;
       break;
     case 'win32':
       cmd = `cmd /c start "" "${url}"`;
@@ -211,6 +214,37 @@ async function runBotCommands(medplum: MedplumClient, argv: string[], commands: 
   }
 }
 
+async function createBot(medplum: MedplumClient, argv: string[]): Promise<void> {
+  if (argv.length < 6) {
+    console.log(`Error: command needs to be npx medplum <new-bot-name> <project-id> <source-file>`);
+    return;
+  }
+  const botName = argv[3];
+  const projectId = argv[4];
+  const sourceFile = argv[5];
+
+  try {
+    const body = {
+      name: botName,
+      description: '',
+    };
+    const newBot = await medplum.post('admin/projects/' + projectId + '/invite', body);
+    const bot = await medplum.readResource('Bot', newBot.id);
+
+    const botConfig = {
+      name: botName,
+      id: newBot.id,
+      source: sourceFile,
+    };
+    await saveBot(medplum, botConfig as MedplumBotConfig, bot);
+    console.log(`Success! Bot created: ${bot.id}`);
+
+    addBotToConfig(botConfig);
+  } catch (err) {
+    console.log('Error while creating new bot ', err);
+  }
+}
+
 async function saveBot(medplum: MedplumClient, botConfig: MedplumBotConfig, bot: Bot): Promise<void> {
   const code = readFileContents(botConfig.source);
   if (!code) {
@@ -269,6 +303,14 @@ function readFileContents(fileName: string): string | undefined {
     return '';
   }
   return readFileSync(path, 'utf8');
+}
+
+function addBotToConfig(botConfig: MedplumBotConfig): void {
+  const config = readConfig();
+  config?.bots?.push(botConfig);
+  writeFile('medplum.config.json', JSON.stringify(config), () => {
+    console.log(`Bot added to config: ${botConfig.id}`);
+  });
 }
 
 if (require.main === module) {
