@@ -42,7 +42,7 @@ export default (env, argv) => ({
         theme_color: '#ffffff',
         icons: [
           {
-            'src': '/img/medplum-logo.svg',
+            'src': '/img/ag-logo.png',
             'type': 'image/svg+xml',
             'sizes': '512x512'
           },
@@ -91,6 +91,18 @@ export default (env, argv) => ({
       {
         test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+      {
+        test: /\.(gif|png|jpe?g)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              outputPath: 'img'
+            }
+          }
+        ]
       },
     ],
   },

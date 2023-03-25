@@ -1,0 +1,23 @@
+{
+  "apiPort": 8103,
+  "region": "us-east-1",
+  "name": "sandbox",
+  "accountNumber": "681246093639",
+  "stackName": "MedplumSandbox",
+  "domainName": "advancedglancefhir.com",
+  "apiDomainName": "api.advancedglancefhir.com",
+  "appDomainName": "app.advancedglancefhir.com",
+  "storageDomainName": "storage.advancedglancefhir.com",
+  "storageBucketName": "medplum-sandbox-storage",
+  "maxAzs": 2,
+  "rdsInstances": 1,
+  "rdsInstanceType": "serverless",
+  "desiredServerCount": 1,
+  "serverMemory": 512,
+  "serverCpu": 256,
+  "serverImage": "medplum/medplum-server:latest",
+  "storagePublicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3YtzC2MZ7wUXxrZ6RMjW\nPyBM3g6CpO4h7+J4n35X3RaPS5oOxxTE3DXwkEeiyJnOmJN9/A4hy4rB0CZ675Y/\nAehMqx7poL5hu+PjJ/w0qUJD/VAxmIr5cL8JO8mMzr7KaPIFJQrEv6D2jNlBAYbj\n8D8lGhfUnLe0j9BP8MyDsWzXMBL6LFCdgvEnQVSxS8kt2rgroS9rtcsIJEtduEwv\nNXL6OA5nl169TZAb/NfPOPbNeNMHQH3MhEZaqMwI3abHo/k6DEbfIvR303To/Wyo\nooztga+cmX2k0KcKNXscmXYP2SdXfUMUHiJQMOd0mtmcMksrE4/5+Ytxavr6ZEl+\nvwIDAQAB\n-----END PUBLIC KEY-----\n",
+  "apiSslCertArn": "arn:aws:acm:us-east-1:681246093639:certificate/61afe7d9-55f3-4308-a269-7f8b8cbaa3b6",
+  "appSslCertArn": "arn:aws:acm:us-east-1:681246093639:certificate/719f53be-3edd-4e53-8fcb-5947bf437180",
+  "storageSslCertArn": "arn:aws:acm:us-east-1:681246093639:certificate/75eab3f2-074b-4dda-8228-40b563c0c32d"
+}

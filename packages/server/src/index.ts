@@ -20,6 +20,8 @@ export async function main(configName: string): Promise<void> {
 
   const config = await loadConfig(configName);
 
+  logger.info(config);
+
   // Preload the schema
   indexStructureDefinitionBundle(readJson('fhir/r4/profiles-types.json') as Bundle);
   indexStructureDefinitionBundle(readJson('fhir/r4/profiles-resources.json') as Bundle);

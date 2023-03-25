@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HeaderSearchInput } from './components/HeaderSearchInput';
 
+
 const useStyles = createStyles((theme) => ({
   logoButton: {
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
@@ -70,7 +71,7 @@ export function AppHeader({ navbarToggle }: AppHeaderProps): JSX.Element {
       <Group position="apart">
         <Group spacing="xs">
           <UnstyledButton className={classes.logoButton} onClick={navbarToggle}>
-            <Logo size={24} />
+            <Logo size={30} />
           </UnstyledButton>
           <HeaderSearchInput />
         </Group>

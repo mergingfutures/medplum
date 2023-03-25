@@ -9,7 +9,11 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "eslint packages/",
-    "prettier": "prettier --write ."
+    "prettier": "prettier --write .",
+    "login": "aws sso login --profile ag-sandbox-admin",
+    "deploy:app": "npm run wrap -- bash ./scripts/deploy-app.sh",
+    "wrap": "aws2-wrap --profile ag-sandbox-admin",
+    "sso:login": "aws sso login --profile ag-sandbox-admin"
   },
   "workspaces": [
     "packages/*"
