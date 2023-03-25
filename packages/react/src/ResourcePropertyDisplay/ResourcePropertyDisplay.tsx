@@ -1,8 +1,8 @@
 import {
-  buildTypeName,
   formatDateTime,
   formatPeriod,
   formatTiming,
+  getElementDefinitionTypeName,
   getTypedPropertyValue,
   PropertyType,
   TypedValue,
@@ -36,6 +36,9 @@ export interface ResourcePropertyDisplayProps {
   link?: boolean;
 }
 
+/**
+ * Low-level component that renders a property from a given resource, given type information
+ */
 export function ResourcePropertyDisplay(props: ResourcePropertyDisplayProps): JSX.Element {
   const { property, propertyType, value } = props;
 
@@ -121,7 +124,7 @@ export function ResourcePropertyDisplay(props: ResourcePropertyDisplayProps): JS
       }
       return (
         <BackboneElementDisplay
-          value={{ type: buildTypeName(property?.path?.split('.') as string[]), value }}
+          value={{ type: getElementDefinitionTypeName(property), value }}
           compact={true}
           ignoreMissingValues={props.ignoreMissingValues}
         />

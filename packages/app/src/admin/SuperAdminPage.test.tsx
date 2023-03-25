@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { NotificationsProvider } from '@mantine/notifications';
+import { Notifications } from '@mantine/notifications';
 import { MockClient } from '@medplum/mock';
 import { MedplumProvider } from '@medplum/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -14,9 +14,8 @@ function setup(): void {
     <MedplumProvider medplum={medplum}>
       <MemoryRouter initialEntries={['/admin/super']} initialIndex={0}>
         <MantineProvider withGlobalStyles withNormalizeCSS>
-          <NotificationsProvider>
-            <AppRoutes />
-          </NotificationsProvider>
+          <Notifications />
+          <AppRoutes />
         </MantineProvider>
       </MemoryRouter>
     </MedplumProvider>
@@ -63,6 +62,24 @@ describe('SuperAdminPage', () => {
 
     await act(async () => {
       fireEvent.click(screen.getByText('Reindex'));
+    });
+
+    expect(screen.getByText('Done')).toBeInTheDocument();
+  });
+
+  test('Purge resources', async () => {
+    setup();
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Purge Resource Type'), { target: { value: 'AuditEvent' } });
+    });
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Purge Before'), { target: { value: '2000-01-01T00:00:00Z' } });
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Purge'));
     });
 
     expect(screen.getByText('Done')).toBeInTheDocument();

@@ -171,7 +171,7 @@ describe('Super Admin routes', () => {
       .set('Authorization', 'Bearer ' + nonAdminAccessToken)
       .type('json')
       .send({
-        resourceType: 'Patient',
+        resourceType: 'PaymentNotice',
       });
 
     expect(res.status).toBe(403);
@@ -183,7 +183,7 @@ describe('Super Admin routes', () => {
       .set('Authorization', 'Bearer ' + adminAccessToken)
       .type('json')
       .send({
-        resourceType: 'Patient',
+        resourceType: 'PaymentNotice',
       });
 
     expect(res.status).toBe(200);
@@ -260,6 +260,46 @@ describe('Super Admin routes', () => {
       .send({
         email,
         password: 'new-password!@#',
+      });
+
+    expect(res.status).toBe(200);
+  });
+
+  test('Purge access denied', async () => {
+    const res = await request(app)
+      .post('/admin/super/purge')
+      .set('Authorization', 'Bearer ' + nonAdminAccessToken)
+      .type('json')
+      .send({
+        resourceType: 'Login',
+        before: '2020-01-01',
+      });
+
+    expect(res.status).toBe(403);
+  });
+
+  test('Purge invalid resource type', async () => {
+    const res = await request(app)
+      .post('/admin/super/purge')
+      .set('Authorization', 'Bearer ' + adminAccessToken)
+      .type('json')
+      .send({
+        resourceType: 'Patient',
+        before: '2020-01-01',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.issue[0].details.text).toBe('Invalid resource type');
+  });
+
+  test('Purge logins success', async () => {
+    const res = await request(app)
+      .post('/admin/super/purge')
+      .set('Authorization', 'Bearer ' + adminAccessToken)
+      .type('json')
+      .send({
+        resourceType: 'Login',
+        before: '2020-01-01',
       });
 
     expect(res.status).toBe(200);
